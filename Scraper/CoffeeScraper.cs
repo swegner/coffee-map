@@ -4,6 +4,8 @@ using Entities;
 using YelpSharp;
 using YelpSharp.Data;
 using YelpSharp.Data.Options;
+using Scraper.Configuration;
+using System.Configuration;
 
 namespace Scraper
 {
@@ -20,8 +22,15 @@ namespace Scraper
             }
             entities.SaveChanges();
 
-            Yelp y = new Yelp(new Options());
-            Task<SearchResults> searchTask = y.Search(new SearchOptions
+            YelpElement yelpConfig = ((ApiKeySection)ConfigurationManager.GetSection(ApiKeySection.SectionName)).Yelp;
+            Yelp yelp = new Yelp(new Options
+            {
+                ConsumerKey = yelpConfig.ConsumerKey,
+                ConsumerSecret = yelpConfig.ConsumerSecret,
+                AccessToken = yelpConfig.Token,
+                AccessTokenSecret = yelpConfig.TokenSecret,
+            });
+            Task<SearchResults> searchTask = yelp.Search(new SearchOptions
             {
                 GeneralOptions = new GeneralOptions
                 {
