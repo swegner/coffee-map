@@ -20,7 +20,7 @@ namespace Scraper
         private const decimal MinLongitude = -122.45M;
         private const decimal MaxLongitude = -122.24M;
 
-        private const decimal CoordinateStep = 0.001M;
+        private const decimal CoordinateStep = 0.01M;
 
         private const double SearchOverlapPercent = 0.1;
 
@@ -53,12 +53,12 @@ namespace Scraper
                 {
                     SouthwestCorner = new Coordinate
                     {
-                        latitude = (double)latitude + ((double)CoordinateStep * (1 + SearchOverlapPercent)),
+                        latitude = (double)latitude,
                         longitude = (double)longitude,
                     },
                     NortheastCorner = new Coordinate
                     {
-                        latitude = (double)latitude,
+                        latitude = (double)latitude + ((double)CoordinateStep * (1 + SearchOverlapPercent)),
                         longitude = (double)longitude + ((double)CoordinateStep * (1 + SearchOverlapPercent)),
                     }
                 };
@@ -102,20 +102,22 @@ namespace Scraper
                     },
                     LocationOptions = new BoundOptions
                     {
-                        sw_latitude = searchArea.SouthwestCorner.latitude,
-                        sw_longitude = searchArea.SouthwestCorner.longitude,
-                        ne_latitude = searchArea.NortheastCorner.latitude,
-                        ne_longitude = searchArea.NortheastCorner.longitude,
+                        sw_latitude = Math.Round(searchArea.SouthwestCorner.latitude, 3),
+                        sw_longitude = Math.Round(searchArea.SouthwestCorner.longitude, 3),
+                        ne_latitude = Math.Round(searchArea.NortheastCorner.latitude, 3),
+                        ne_longitude = Math.Round(searchArea.NortheastCorner.longitude, 3),
                     },
                 };
+                Trace.Write("Querying yelp...");
                 Task<SearchResults> searchTask = yelp.Search(query);
-
                 SearchResults results = searchTask.Result;
-                numFound = results.businesses.Count;
+                Trace.WriteLine("done.");
+
                 if (results.error != null)
                 {
                     throw new Exception(results.error.text);
                 }
+                numFound = results.businesses.Count;
 
                 IEnumerable<CoffeeShop> newShops = results.businesses
                     .Where(b => b.location.city.IndexOf("seattle", StringComparison.OrdinalIgnoreCase) != -1)
