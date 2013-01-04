@@ -27,7 +27,7 @@ namespace Scraper
             });
         }
 
-        public async Task<IEnumerable<CoffeeShop>> SearchYelp(SearchArea searchArea)
+        public async Task<SearchResult> Search(SearchArea searchArea)
         {
             List<CoffeeShop> coffeeShops = new List<CoffeeShop>();
 
@@ -88,7 +88,10 @@ namespace Scraper
             }
             while (numFound > 0);
 
-            return coffeeShops;
+            return new SearchResult
+            {
+                Results = coffeeShops,
+            };
         }
     }
 }

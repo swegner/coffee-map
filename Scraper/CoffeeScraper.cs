@@ -47,7 +47,7 @@ namespace Scraper
                     }
                 };
 
-                IEnumerable<CoffeeShop> shops = _coffeeSearcher.SearchYelp(searchArea).Result;
+                IEnumerable<CoffeeShop> shops = _coffeeSearcher.Search(searchArea).Result.Results;
 
                 int numShops = 0;
                 int numNewShops = 0;
