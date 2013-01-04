@@ -20,7 +20,7 @@ namespace Scraper
         private const decimal MinLongitude = -122.45M;
         private const decimal MaxLongitude = -122.24M;
 
-        private const decimal CoordinateStep = 0.01M;
+        private const decimal CoordinateStep = 0.001M;
 
         private const double SearchOverlapPercent = 0.1;
 
@@ -63,7 +63,8 @@ namespace Scraper
                     }
                 };
 
-                IEnumerable<CoffeeShop> shops = this.SearchYelp(yelp, searchArea);
+                IEnumerable<CoffeeShop> shops = this.SearchYelp(yelp, searchArea).Result;
+
                 int numShops = 0;
                 int numNewShops = 0;
                 foreach (var coffeeShop in shops)
@@ -76,19 +77,17 @@ namespace Scraper
                     }
                     numShops++;
                 }
-
-                Trace.WriteLine(string.Format("SearchArea: {0} shops, {1} new", numShops, numNewShops));
             }
 
             entities.SaveChanges();
         }
 
-        private IEnumerable<CoffeeShop> SearchYelp(Yelp yelp, SearchArea searchArea)
+        private async Task<IEnumerable<CoffeeShop>> SearchYelp(Yelp yelp, SearchArea searchArea)
         {
             List<CoffeeShop> coffeeShops = new List<CoffeeShop>();
 
-            int offset = 0;
             int numFound;
+            int offset = 0;
             do
             {
                 SearchOptions query = new SearchOptions
@@ -96,28 +95,31 @@ namespace Scraper
                     GeneralOptions = new GeneralOptions
                     {
                         category_filter = "coffee",
-                        limit = 20,
                         offset = offset,
+                        limit = 20,
                         sort = 1,
                     },
                     LocationOptions = new BoundOptions
                     {
-                        sw_latitude = Math.Round(searchArea.SouthwestCorner.latitude, 3),
-                        sw_longitude = Math.Round(searchArea.SouthwestCorner.longitude, 3),
-                        ne_latitude = Math.Round(searchArea.NortheastCorner.latitude, 3),
-                        ne_longitude = Math.Round(searchArea.NortheastCorner.longitude, 3),
+                        sw_latitude = searchArea.SouthwestCorner.latitude,
+                        sw_longitude = searchArea.SouthwestCorner.longitude,
+                        ne_latitude = searchArea.NortheastCorner.latitude,
+                        ne_longitude = searchArea.NortheastCorner.longitude,
                     },
                 };
-                Trace.Write("Querying yelp...");
                 Task<SearchResults> searchTask = yelp.Search(query);
-                SearchResults results = searchTask.Result;
-                Trace.WriteLine("done.");
+                SearchResults results = await searchTask;
 
                 if (results.error != null)
                 {
                     throw new Exception(results.error.text);
                 }
+
                 numFound = results.businesses.Count;
+                if (results.total > 40)
+                {
+                    throw new InvalidOperationException("Greater than 40 results returned-- use a smaller region");
+                }
 
                 IEnumerable<CoffeeShop> newShops = results.businesses
                     .Where(b => b.location.city.IndexOf("seattle", StringComparison.OrdinalIgnoreCase) != -1)
@@ -132,13 +134,14 @@ namespace Scraper
                         YelpId = b.id,
                     });
 
+                offset += numFound;
+
                 foreach (var shop in newShops)
                 {
                     coffeeShops.Add(shop);
                 }
-
-                offset += numFound;
-            } while (numFound > 0);
+            }
+            while (numFound > 0);
 
             return coffeeShops;
         }
