@@ -50,8 +50,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="YelpSharp">
-      <HintPath>..\packages\YelpSharp.1.1.0.0\lib\net4\YelpSharp.dll</HintPath>
+    <Reference Include="YelpSharp, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\YelpSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
