@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Entities;
@@ -14,6 +13,7 @@ namespace Scraper
 {
     public class CoffeeScraper
     {
+        private readonly CoffeeSearcher _coffeeSearcher = new CoffeeSearcher();
         private const decimal MinLatitude = 47.45M;
         private const decimal MaxLatitude = 47.78M;
 
@@ -63,7 +63,7 @@ namespace Scraper
                     }
                 };
 
-                IEnumerable<CoffeeShop> shops = this.SearchYelp(yelp, searchArea).Result;
+                IEnumerable<CoffeeShop> shops = _coffeeSearcher.SearchYelp(yelp, searchArea).Result;
 
                 int numShops = 0;
                 int numNewShops = 0;
@@ -80,76 +80,6 @@ namespace Scraper
             }
 
             entities.SaveChanges();
-        }
-
-        private async Task<IEnumerable<CoffeeShop>> SearchYelp(Yelp yelp, SearchArea searchArea)
-        {
-            List<CoffeeShop> coffeeShops = new List<CoffeeShop>();
-
-            int numFound;
-            int offset = 0;
-            do
-            {
-                SearchOptions query = new SearchOptions
-                {
-                    GeneralOptions = new GeneralOptions
-                    {
-                        category_filter = "coffee",
-                        offset = offset,
-                        limit = 20,
-                        sort = 1,
-                    },
-                    LocationOptions = new BoundOptions
-                    {
-                        sw_latitude = searchArea.SouthwestCorner.latitude,
-                        sw_longitude = searchArea.SouthwestCorner.longitude,
-                        ne_latitude = searchArea.NortheastCorner.latitude,
-                        ne_longitude = searchArea.NortheastCorner.longitude,
-                    },
-                };
-                Task<SearchResults> searchTask = yelp.Search(query);
-                SearchResults results = await searchTask;
-
-                if (results.error != null)
-                {
-                    throw new Exception(results.error.text);
-                }
-
-                numFound = results.businesses.Count;
-                if (results.total > 40)
-                {
-                    throw new InvalidOperationException("Greater than 40 results returned-- use a smaller region");
-                }
-
-                IEnumerable<CoffeeShop> newShops = results.businesses
-                    .Where(b => b.location.city.IndexOf("seattle", StringComparison.OrdinalIgnoreCase) != -1)
-                    .Select(b => new CoffeeShop
-                    {
-                        Name = b.name,
-                        Location = new Coordinates
-                        {
-                            Latitude = b.location.coordinate.latitude,
-                            Longitude = b.location.coordinate.longitude,
-                        },
-                        YelpId = b.id,
-                    });
-
-                offset += numFound;
-
-                foreach (var shop in newShops)
-                {
-                    coffeeShops.Add(shop);
-                }
-            }
-            while (numFound > 0);
-
-            return coffeeShops;
-        }
-
-        private class SearchArea
-        {
-            public Coordinate SouthwestCorner { get; set; }
-            public Coordinate NortheastCorner { get; set; }
         }
     }
 }
