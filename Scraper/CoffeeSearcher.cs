@@ -11,7 +11,7 @@ using YelpSharp.Data.Options;
 
 namespace Scraper
 {
-    public class CoffeeSearcher
+    public class CoffeeSearcher : ISearcher
     {
         private readonly Yelp _yelp;
 

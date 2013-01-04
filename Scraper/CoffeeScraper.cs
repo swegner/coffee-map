@@ -6,7 +6,6 @@ namespace Scraper
 {
     public class CoffeeScraper
     {
-        private readonly CoffeeSearcher _coffeeSearcher = new CoffeeSearcher();
         private const decimal MinLatitude = 47.45M;
         private const decimal MaxLatitude = 47.78M;
 
@@ -16,6 +15,13 @@ namespace Scraper
         private const decimal CoordinateStep = 0.001M;
 
         private const double SearchOverlapPercent = 0.1;
+
+        private readonly ISearcher _coffeeSearcher;
+
+        public CoffeeScraper()
+        {
+             this._coffeeSearcher = new CoffeeSearcher();
+        }
 
         public void Run()
         {
@@ -47,7 +53,7 @@ namespace Scraper
                     }
                 };
 
-                IEnumerable<CoffeeShop> shops = _coffeeSearcher.Search(searchArea).Result.Results;
+                IEnumerable<CoffeeShop> shops = this._coffeeSearcher.Search(searchArea).Result.Results;
 
                 int numShops = 0;
                 int numNewShops = 0;
