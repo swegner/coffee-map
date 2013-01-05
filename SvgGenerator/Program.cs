@@ -12,9 +12,15 @@ namespace SvgGenerator
 {
     internal class Program
     {
+        private const int LatitudeScaleFactor = 60;
+        private const int LongitudeScaleFactor = 41;
+
+        private const double DistanceMultiplier = 100;
+
         private const int Radius = 2;
-        private const double DistanceMultiplier = 2500;
+        private const decimal Opacity = 1.0M;
         private const string Color = "black";
+
         private const string FileName = "coffee-map.svg";
 
         public static void Main()
@@ -34,8 +40,8 @@ namespace SvgGenerator
                     .ThenBy(cs => cs.Location.Longitude)
                     .Select(cs => new
                     {
-                        X = (cs.Location.Longitude - minLongitude) * DistanceMultiplier,
-                        Y = (cs.Location.Latitude - maxLatitude) * -1 * DistanceMultiplier,
+                        X = (cs.Location.Longitude - minLongitude) * LongitudeScaleFactor * DistanceMultiplier,
+                        Y = (cs.Location.Latitude - maxLatitude) * -1 * LatitudeScaleFactor * DistanceMultiplier,
                     })
                     .ToList();
 
@@ -44,7 +50,7 @@ namespace SvgGenerator
                         new XAttribute("cx", c.X),
                         new XAttribute("cy", c.Y),
                         new XAttribute("r", Radius),
-                        new XAttribute("fill", Color)));
+                        new XAttribute("style", string.Format("fill:{0};opacity:{1}", Color, Opacity))));
             }
 
             XObject[] childObjects = new XObject[] { new XAttribute("version", "1.1") }
