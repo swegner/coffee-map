@@ -37,30 +37,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
-    <Reference Include="SharpVectors.Converters">
-      <HintPath>..\lib\sharpvectors\1.0\SharpVectors.Converters.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpVectors.Core">
-      <HintPath>..\lib\sharpvectors\1.0\SharpVectors.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpVectors.Css">
-      <HintPath>..\lib\sharpvectors\1.0\SharpVectors.Css.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpVectors.Dom">
-      <HintPath>..\lib\sharpvectors\1.0\SharpVectors.Dom.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpVectors.Model">
-      <HintPath>..\lib\sharpvectors\1.0\SharpVectors.Model.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpVectors.Rendering.Gdi">
-      <HintPath>..\lib\sharpvectors\1.0\SharpVectors.Rendering.Gdi.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpVectors.Rendering.Wpf">
-      <HintPath>..\lib\sharpvectors\1.0\SharpVectors.Rendering.Wpf.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpVectors.Runtime">
-      <HintPath>..\lib\sharpvectors\1.0\SharpVectors.Runtime.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

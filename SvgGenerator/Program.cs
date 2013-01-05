@@ -1,6 +1,4 @@
 ﻿using Entities;
-using SharpVectors.Converters;
-using SharpVectors.Renderers.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
