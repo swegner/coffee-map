@@ -8,11 +8,11 @@ namespace Scraper
 {
     public class CoffeeScraper
     {
-        private const double MinLatitude = 47.45;
-        private const double MaxLatitude = 47.78;
+        private const double MinLatitude = 47.40;
+        private const double MaxLatitude = 47.85;
 
-        private const double MinLongitude = -122.45;
-        private const double MaxLongitude = -122.24;
+        private const double MinLongitude = -122.50;
+        private const double MaxLongitude = -122.20;
 
         private readonly ISearcher _coffeeSearcher;
 
