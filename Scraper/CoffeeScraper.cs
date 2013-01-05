@@ -1,75 +1,69 @@
 ﻿using System.Collections.Generic;
 using Entities;
 using YelpSharp.Data;
+using System.Data.Entity;
+using System;
 
 namespace Scraper
 {
     public class CoffeeScraper
     {
-        private const decimal MinLatitude = 47.45M;
-        private const decimal MaxLatitude = 47.78M;
+        private const double MinLatitude = 47.45;
+        private const double MaxLatitude = 47.78;
 
-        private const decimal MinLongitude = -122.45M;
-        private const decimal MaxLongitude = -122.24M;
-
-        private const decimal CoordinateStep = 0.001M;
-
-        private const double SearchOverlapPercent = 0.1;
+        private const double MinLongitude = -122.45;
+        private const double MaxLongitude = -122.24;
 
         private readonly ISearcher _coffeeSearcher;
 
         public CoffeeScraper()
         {
-             this._coffeeSearcher = new CoffeeSearcher();
+             this._coffeeSearcher = new SplitRegionSearcher(new CoffeeSearcher());
         }
 
         public void Run()
         {
             CoffeeEntities entities = new CoffeeEntities();
-            var coffeeShops = entities.CoffeeShops;
+            DbSet<CoffeeShop> coffeeShops = entities.CoffeeShops;
+            this.ClearDatabase(coffeeShops);
+            entities.SaveChanges();
 
+            SearchArea searchArea = new SearchArea
+            {
+                SouthwestCorner = new Coordinate
+                {
+                    latitude = (double)MinLatitude,
+                    longitude = (double)MinLongitude,
+                },
+                NortheastCorner = new Coordinate
+                {
+                    latitude = (double)MaxLatitude,
+                    longitude = (double)MaxLongitude,
+                }
+            };
+
+            SearchResult result = this._coffeeSearcher.Search(searchArea).Result;
+            if (result.Error != null)
+            {
+                throw new Exception(result.Error.Description);
+            }
+            else
+            {
+                foreach (CoffeeShop shop in result.Results)
+                {
+                    coffeeShops.Add(shop);
+                }
+
+                entities.SaveChanges();
+            }
+        }
+
+        private void ClearDatabase(DbSet<CoffeeShop> coffeeShops)
+        {
             foreach (var shop in coffeeShops)
             {
                 coffeeShops.Remove(shop);
             }
-            entities.SaveChanges();
-
-            Dictionary<string, CoffeeShop> shopDict = new Dictionary<string, CoffeeShop>();
-
-            for (decimal latitude = MinLatitude; latitude < MaxLatitude; latitude += CoordinateStep)
-            for (decimal longitude = MinLongitude; longitude < MaxLongitude; longitude += CoordinateStep)
-            {
-                SearchArea searchArea = new SearchArea
-                {
-                    SouthwestCorner = new Coordinate
-                    {
-                        latitude = (double)latitude,
-                        longitude = (double)longitude,
-                    },
-                    NortheastCorner = new Coordinate
-                    {
-                        latitude = (double)latitude + ((double)CoordinateStep * (1 + SearchOverlapPercent)),
-                        longitude = (double)longitude + ((double)CoordinateStep * (1 + SearchOverlapPercent)),
-                    }
-                };
-
-                IEnumerable<CoffeeShop> shops = this._coffeeSearcher.Search(searchArea).Result.Results;
-
-                int numShops = 0;
-                int numNewShops = 0;
-                foreach (var coffeeShop in shops)
-                {
-                    if (!shopDict.ContainsKey(coffeeShop.YelpId))
-                    {
-                        shopDict[coffeeShop.YelpId] = coffeeShop;
-                        coffeeShops.Add(coffeeShop);
-                        numNewShops++;
-                    }
-                    numShops++;
-                }
-            }
-
-            entities.SaveChanges();
         }
     }
 }

@@ -68,7 +68,7 @@ namespace Scraper
                             yelpError.id, yelpError.description, yelpError.text, yelpError.field),
                     };
                 }
-                else if (results.total > MaxSearchResults)
+                else if (results.total >= MaxSearchResults)
                 {
                     error = new SearchError
                     {
@@ -78,7 +78,7 @@ namespace Scraper
                 }
                 else
                 {
-                    numFound = results.total;
+                    numFound = results.businesses.Count;
                     IEnumerable<CoffeeShop> newShops = results.businesses
                         .Where(b => b.location.city.IndexOf("seattle", StringComparison.OrdinalIgnoreCase) != -1)
                         .Select(b => new CoffeeShop

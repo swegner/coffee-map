@@ -138,7 +138,7 @@ namespace Scraper
                 }
                 else
                 {
-                    equals = YelpIdComparer.Equals(x, y);
+                    equals = YelpIdComparer.Equals(x.YelpId, y.YelpId);
                 }
 
                 return equals;
@@ -147,7 +147,7 @@ namespace Scraper
             public override int GetHashCode(CoffeeShop obj)
             {
 
-                return (obj == null) ? 0 : YelpIdComparer.GetHashCode(obj);
+                return (obj == null) ? 0 : YelpIdComparer.GetHashCode(obj.YelpId);
             }
         }
     }
