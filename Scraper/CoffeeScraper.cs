@@ -1,56 +1,69 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Entities;
-using YelpSharp;
 using YelpSharp.Data;
-using YelpSharp.Data.Options;
+using System.Data.Entity;
+using System;
 
 namespace Scraper
 {
     public class CoffeeScraper
     {
+        private const double MinLatitude = 47.45;
+        private const double MaxLatitude = 47.78;
+
+        private const double MinLongitude = -122.45;
+        private const double MaxLongitude = -122.24;
+
+        private readonly ISearcher _coffeeSearcher;
+
+        public CoffeeScraper()
+        {
+             this._coffeeSearcher = new SplitRegionSearcher(new CoffeeSearcher());
+        }
+
         public void Run()
         {
             CoffeeEntities entities = new CoffeeEntities();
-            var coffeeShops = entities.CoffeeShops;
+            DbSet<CoffeeShop> coffeeShops = entities.CoffeeShops;
+            this.ClearDatabase(coffeeShops);
+            entities.SaveChanges();
 
+            SearchArea searchArea = new SearchArea
+            {
+                SouthwestCorner = new Coordinate
+                {
+                    latitude = (double)MinLatitude,
+                    longitude = (double)MinLongitude,
+                },
+                NortheastCorner = new Coordinate
+                {
+                    latitude = (double)MaxLatitude,
+                    longitude = (double)MaxLongitude,
+                }
+            };
+
+            SearchResult result = this._coffeeSearcher.Search(searchArea).Result;
+            if (result.Error != null)
+            {
+                throw new Exception(result.Error.Description);
+            }
+            else
+            {
+                foreach (CoffeeShop shop in result.Results)
+                {
+                    coffeeShops.Add(shop);
+                }
+
+                entities.SaveChanges();
+            }
+        }
+
+        private void ClearDatabase(DbSet<CoffeeShop> coffeeShops)
+        {
             foreach (var shop in coffeeShops)
             {
                 coffeeShops.Remove(shop);
             }
-            entities.SaveChanges();
-
-            Yelp y = new Yelp(new Options());
-            Task<SearchResults> searchTask = y.Search(new SearchOptions
-            {
-                GeneralOptions = new GeneralOptions
-                {
-                    category_filter = "Coffee",
-                },
-                LocationOptions = new LocationOptions
-                {
-                    location = "Seattle, WA",
-                },
-            });
-
-            var results = searchTask.Result;
-            var newShops = results.businesses
-                .Select(b => new CoffeeShop
-                {
-                    Name = b.name,
-                    Location = new Coordinates
-                    {
-                        Latitude = b.location.coordinate.latitude,
-                        Longitude = b.location.coordinate.longitude,
-                    },
-                    YelpId = b.id,
-                });
-            foreach (var shop in newShops)
-            {
-                coffeeShops.Add(shop);
-            }
-
-            entities.SaveChanges();
         }
     }
 }
