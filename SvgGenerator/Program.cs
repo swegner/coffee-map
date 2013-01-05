@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace SvgGenerator
 {
-    public class Class1
+    internal class Program
     {
+        public static void Main()
+        {
+
+        }
     }
 }
