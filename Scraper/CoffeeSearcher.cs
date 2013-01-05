@@ -13,6 +13,7 @@ namespace Scraper
 {
     public class CoffeeSearcher : ISearcher
     {
+        private const int MaxSearchResults = 40;
         private readonly Yelp _yelp;
 
         public CoffeeSearcher()
@@ -29,12 +30,14 @@ namespace Scraper
 
         public async Task<SearchResult> Search(SearchArea searchArea)
         {
+            SearchError error = null;
             List<CoffeeShop> coffeeShops = new List<CoffeeShop>();
 
             int numFound;
             int offset = 0;
             do
             {
+                numFound = 0;
                 SearchOptions query = new SearchOptions
                 {
                     GeneralOptions = new GeneralOptions
@@ -57,39 +60,46 @@ namespace Scraper
 
                 if (results.error != null)
                 {
-                    throw new Exception(results.error.text);
-                }
-
-                numFound = results.businesses.Count;
-                if (results.total > 40)
-                {
-                    throw new InvalidOperationException("Greater than 40 results returned-- use a smaller region");
-                }
-
-                IEnumerable<CoffeeShop> newShops = results.businesses
-                    .Where(b => b.location.city.IndexOf("seattle", StringComparison.OrdinalIgnoreCase) != -1)
-                    .Select(b => new CoffeeShop
+                    YelpSharp.Data.SearchError yelpError = results.error;
+                    error = new SearchError
                     {
-                        Name = b.name,
-                        Location = new Coordinates
-                        {
-                            Latitude = b.location.coordinate.latitude,
-                            Longitude = b.location.coordinate.longitude,
-                        },
-                        YelpId = b.id,
-                    });
-
-                offset += numFound;
-
-                foreach (var shop in newShops)
-                {
-                    coffeeShops.Add(shop);
+                        Id = ErrorId.YelpError,
+                        Description = string.Format("ID: {0}; Description: {1}; Text: {2}; Field: {3}",
+                            yelpError.id, yelpError.description, yelpError.text, yelpError.field),
+                    };
                 }
-            }
-            while (numFound > 0);
+                else if (results.total > MaxSearchResults)
+                {
+                    error = new SearchError
+                    {
+                        Id = ErrorId.TooManyResults,
+                        Description = string.Format("Maximum number of results exceeded, use a smaller region. Max Results: {0}", MaxSearchResults),
+                    };
+                }
+                else
+                {
+                    numFound = results.total;
+                    IEnumerable<CoffeeShop> newShops = results.businesses
+                        .Where(b => b.location.city.IndexOf("seattle", StringComparison.OrdinalIgnoreCase) != -1)
+                        .Select(b => new CoffeeShop
+                        {
+                            Name = b.name,
+                            Location = new Coordinates
+                            {
+                                Latitude = b.location.coordinate.latitude,
+                                Longitude = b.location.coordinate.longitude,
+                            },
+                            YelpId = b.id,
+                        });
+
+                    coffeeShops.AddRange(newShops);
+                    offset += numFound;
+                }
+            } while (error == null && numFound > 0);
 
             return new SearchResult
             {
+                Error = error,
                 Results = coffeeShops,
             };
         }
